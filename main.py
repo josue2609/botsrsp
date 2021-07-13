@@ -19,9 +19,12 @@ req = Requete()
 #Traitement pour l'orchestration des services 
 def process_message(text):
     formatted_message = text.lower()
-    if formatted_message == "test":
-        response = "Test Successful"
-    elif formatted_message == "What are you doing":
+    if formatted_message == "menu":
+        rows = req.getMenu()
+        for ros in rows:
+            response = ros.get('MENU') 
+        
+    elif formatted_message == "what are you doing":
         response = "Changing my life for better"
     else:
         response = "Make your life easier"
@@ -38,10 +41,14 @@ def webhook():
         payload = request.json
         event = payload['entry'][0]['messaging']
         for msg in event:
-            text = msg['message']['text']
             sender_id = msg['sender']['id']
+            text = msg['message']['text']
+            print(text)
+            print(sender_id)
             response = process_message(text)
+            #response = 'nouveau texte de Bot'
             bot.send_text_message(sender_id, response)
+            #print(bot.send_text_message(sender_id, response))
         return "Message received"
     else:
         return "200"
