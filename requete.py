@@ -11,14 +11,21 @@ class Requete:
 
     def getMenu(self):
         req = '''
-                SELECT MENU FROM menu
+                SELECT MENU, COUNT(MENU) as nombre FROM menu
                 '''
         self.cursor.execute(req)
         return self.cursor.fetchall()
 
+    def getMenubyID(self, IDMenu):
+        req = '''
+                SELECT MENU FROM menu WHERE ID_MENU= %s
+                '''
+        self.cursor.execute(req, (IDMenu))
+        return self.cursor.fetchall()
+
     def getNatureMenu(self, IDMenu):
         req = '''
-                   SELECT n.TYPE_NATURE 
+                   SELECT n.TYPE_NATURE
                    FROM appartenir a, nature n, menu m
                         WHERE a.ID_NATURE = n.ID_NATURE
                             AND a.ID_MENU = %s 
@@ -27,6 +34,17 @@ class Requete:
         self.cursor.execute(req, (IDMenu,IDMenu))
         return self.cursor.fetchall()
     
+    def getNatureMenubyID(self, IDMenu):
+        req = '''
+                   SELECT n.TYPE_NATURE, COUNT(n.TYPE_NATURE) as nb
+                   FROM appartenir a, nature n, menu m
+                        WHERE a.ID_NATURE = n.ID_NATURE
+                            AND a.ID_MENU = %s 
+	                        AND m.ID_MENU = %s
+                 '''
+        self.cursor.execute(req, (IDMenu,IDMenu))
+        return self.cursor.fetchall()
+
     def getNatureID(self, Typenature):
         req = '''
                 SELECT n.ID_NATURE FROM nature n WHERE TYPE_NATURE = %s
@@ -84,6 +102,25 @@ class Requete:
                 '''
         self.cursor.execute(req, (IDNature, IDNature))
         return self.cursor.fetchall()
+    
+    def getNatureContact(self, IDNature, IDLIAISON):
+        req = '''
+                SELECT DISTINCT c.CONTACT, c.MAIL
+                FROM liaison b, nature n, contact c, joindre j
+                    WHERE n.ID_NATURE = %s
+                        AND j.ID_NATURE = %s
+                        AND j.ID_LIAISON = %s
+                        AND c.ID_LIAISON = %s
+                '''
+        self.cursor.execute(req, (IDNature, IDNature, IDLIAISON, IDLIAISON))
+        return self.cursor.fetchall()
+
+    def getNatureContactID(self, LIEU):
+        req = '''
+                SELECT c.ID_LIAISON FROM liaison c WHERE LIEU=%s
+                '''
+        self.cursor.execute(req, (LIEU))
+        return self.cursor.fetchone()
 
     def _close(self):
         self.conn.close()

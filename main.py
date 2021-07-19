@@ -1,10 +1,11 @@
 from flask.wrappers import Response
 from app import app
+from threading import Thread
 from flask import jsonify
 from flask import flash, request
 from requete import Requete
 from Keys import facebook_bot_page_access_token
-from pymessenger.bot import Bot
+from pymessenger.bot import Bot, NotificationType
 
 #Token pour valider la liasion Facebook
 PAGE_ACCESS_TOKEN = facebook_bot_page_access_token
@@ -17,18 +18,206 @@ bot = Bot(PAGE_ACCESS_TOKEN)
 req = Requete()
 
 #Traitement pour l'orchestration des services 
-def process_message(text):
-    formatted_message = text.lower()
-    if formatted_message == "menu":
+def solde_liste(sender_id):
+    liste = []
+    rows1 = req.getNatureMenu('1')
+    for row1 in rows1:
+        response = row1.get('TYPE_NATURE')
+        bot.send_text_message(sender_id, response)
+        #bot.send_quick_reply(sender_id, CONDITIONS = True)
+        liste.append(response)
+        #print(liste) 
+    bot.send_text_message(sender_id, "Choisissez la nature:")
+    return liste 
+
+def active_liste(sender_id):
+    liste = []
+    rows1 = req.getNatureMenu('2')
+    for row1 in rows1:
+        response = row1.get('TYPE_NATURE')
+        bot.send_text_message(sender_id, response)
+        #bot.send_quick_reply(sender_id, CONDITIONS = True)
+        liste.append(response)
+        #print(liste) 
+    bot.send_text_message(sender_id, "Choisissez la nature:")
+    return liste 
+
+def retraite_liste(sender_id):
+    liste = []
+    rows1 = req.getNatureMenu('3')
+    for row1 in rows1:
+        response = row1.get('TYPE_NATURE')
+        bot.send_text_message(sender_id, response)
+        #bot.send_quick_reply(sender_id, CONDITIONS = True)
+        liste.append(response)
+        #print(liste) 
+    bot.send_text_message(sender_id, "Choisissez la nature:")
+    return liste 
+
+def liste_solde(sender_id):
+    liste = []
+    rows1 = req.getNatureMenu('1')
+    for row1 in rows1:
+        response = row1.get('TYPE_NATURE')
+        liste.append(response)
+    return liste 
+
+def liste_active(sender_id):
+    liste = []
+    rows1 = req.getNatureMenu('2')
+    for row1 in rows1:
+        response = row1.get('TYPE_NATURE')
+        liste.append(response)
+    return liste 
+
+def liste_retraite(sender_id):
+    liste = []
+    rows1 = req.getNatureMenu('3')
+    for row1 in rows1:
+        response = row1.get('TYPE_NATURE')
+        liste.append(response)
+    return liste 
+
+def nature_solde(sender_id, message):
+    rowsm = req.getNatureID(message)
+    for rowsi in rowsm:
+        idm = rowsm.get('ID_NATURE')
+        resp = req.getNatureDescripition(idm)
+        for re in resp:
+            response = re.get('DESCRIPTION')
+            bot.send_text_message(sender_id,response)
+    return
+
+def nature_active(sender_id, message):
+    rowsm = req.getNatureID(message)
+    for rowsi in rowsm:
+        idm = rowsm.get('ID_NATURE')
+        resp = req.getNatureDescripition(idm)
+        for re in resp:
+            response = re.get('DESCRIPTION')
+            bot.send_text_message(sender_id,response)
+    return
+
+def nature_retraite(sender_id, message):
+    rowsm = req.getNatureID(message)
+    for rowsi in rowsm:
+        idm = rowsm.get('ID_NATURE')
+        resp = req.getNatureDescripition(idm)
+        for re in resp:
+            response = re.get('DESCRIPTION')
+            bot.send_text_message(sender_id,response)
+    return
+
+def details_nature(sender_id,message):
+    deta = message.split(":")
+    if deta[0] == 'CONDITIONS':
+        # alaina aloha ny ID raha deta[2] ny type_nature
+        #
+        #dia alaina lay ID dia jerena ilay condition
+        #
+        id_n = deta[1]
+        maka_id = req.getNatureID(id_n)
+        for makaid in maka_id:
+            id_naka = maka_id.get('ID_NATURE')
+            maka = req.getNatureCondition(id_naka)
+            for valiny in maka:
+                response = valiny.get('CONDITIONS')
+                bot.send_text_message(sender_id,response)
+            bot.send_text_message(sender_id, "Tapez CONDITIONS/BENEFICIAIRE/PIECE/CONTACT:TYPE NATURE Pour voir les détails")
+    elif deta[0] == 'PIECE':
+        id_n = deta[1]
+        maka_id = req.getNatureID(id_n)
+        for makaid in maka_id:
+            id_naka = maka_id.get('ID_NATURE')
+            maka = req.getNaturePiece(id_naka)
+            for valiny in maka:
+                response = valiny.get('PIECE')
+                bot.send_text_message(sender_id,response)
+            bot.send_text_message(sender_id, "Tapez CONDITIONS/BENEFICIAIRE/PIECE/CONTACT:TYPE NATURE Pour voir les détails")
+    elif deta[0] == 'BENEFICIAIRE':
+        id_n = deta[1]
+        maka_id = req.getNatureID(id_n)
+        for makaid in maka_id:
+            id_naka = maka_id.get('ID_NATURE')
+            maka = req.getNatureBeneficiaire(id_naka)
+            for valiny in maka:
+                response = valiny.get('BENEFICIAIRE')
+                bot.send_text_message(sender_id,response)
+            bot.send_text_message(sender_id, "Tapez CONDITIONS/BENEFICIAIRE/PIECE/CONTACT:TYPE NATURE Pour voir les détails")
+    elif deta[0] == 'CONTACT':
+        id_n = deta[1]
+        maka_id = req.getNatureID(id_n)
+        for makaid in maka_id:
+            id_naka = maka_id.get('ID_NATURE')
+            print(id_naka)
+            lieu = deta[2]
+            print(lieu)
+            makalieu_id= req.getNatureContactID(lieu)
+            for makalieuid in makalieu_id:
+                lieux = makalieu_id.get('ID_LIAISON')
+                maka = req.getNatureContact(id_naka,lieux)
+                print(maka)
+                for valiny in maka:
+                    print(valiny)
+                    response = valiny.get('CONTACT')
+                    reponse1 = valiny.get('MAIL')
+                    print(response)
+                    print(reponse1)
+                    bot.send_text_message(sender_id,response)
+                    bot.send_text_message(sender_id,reponse1)
+            bot.send_text_message(sender_id, "Tapez CONDITIONS/BENEFICIAIRE/PIECE/CONTACT:TYPE NATURE Pour voir les détails")
+    elif deta[0] == 'DUREE':
+            id_n = deta[1]
+            maka_id = req.getNatureID(id_n)
+            for makaid in maka_id:
+                id_naka = maka_id.get('ID_NATURE')
+                maka = req.getNatureDurée(id_naka)
+                for valiny in maka:
+                    response = valiny.get('DUREE_TRAITEMENT')
+                    bot.send_text_message(sender_id,response)
+                bot.send_text_message(sender_id, "Tapez CONDITIONS/BENEFICIAIRE/PIECE/CONTACT:TYPE NATURE Pour voir les détails")
+    return
+
+def process_message(sender_id, message):
+    message = message.strip()
+    if message == 'MENU':
         rows = req.getMenu()
-        for ros in rows:
-            response = ros.get('MENU') 
-        
-    elif formatted_message == "what are you doing":
-        response = "Changing my life for better"
+        for rowd in rows:
+            it = rowd.get('nombre')
+            it = int(it)
+            for i in range (it+1):
+                re = req.getMenubyID(i)
+                for resp in re:
+                    response = resp.get('MENU')
+                    bot.send_text_message(sender_id, response)
+            bot.send_text_message(sender_id, "Chaisissez votre menu: ")       
+        return 
+
+    elif message == 'SOLDE':
+        solde_liste(sender_id)    
+        return 
+    elif message == 'AGENTS DE L\'ETAT EN ACTIVITÉ':
+        active_liste(sender_id)
+        return
+    elif message == 'AGENTS DE L\'ETAT RETRAITÉS':
+        retraite_liste(sender_id)
     else:
-        response = "Make your life easier"
-    return response
+        ma_liste = liste_solde(sender_id)
+        ma_liste1 = liste_active(sender_id)
+        ma_liste2 = liste_retraite(sender_id)
+        if message in ma_liste:
+            nature_solde(sender_id,message)
+            bot.send_text_message(sender_id, "Tapez CONDITIONS/BENEFICIAIRE/PIECE/CONTACT:TYPE NATURE Pour voir les détails")
+        elif message in ma_liste1:
+            nature_active(sender_id,message)
+            bot.send_text_message(sender_id, "Tapez CONDITIONS/BENEFICIAIRE/PIECE/CONTACT:TYPE NATURE Pour voir les détails")
+        elif message in ma_liste2:
+            nature_retraite(sender_id,message)
+            bot.send_text_message(sender_id, "Tapez CONDITIONS/BENEFICIAIRE/PIECE/CONTACT:TYPE NATURE Pour voir les détails")
+        else:
+            details_nature(sender_id,message)
+        return
+    
 
 @app.route('/', methods = ["GET","POST"])
 def webhook():
@@ -37,27 +226,30 @@ def webhook():
             return request.args.get("hub.challenge")
         else:
             return "Problème liaison avec Facebook!"
+
     elif request.method == "POST":
-        payload = request.json
-        event = payload['entry'][0]['messaging']
-        for msg in event:
-            sender_id = msg['sender']['id']
-            text = msg['message']['text']
-            print(text)
-            print(sender_id)
-            response = process_message(text)
-            #response = 'nouveau texte de Bot'
-            bot.send_text_message(sender_id, response)
-            #print(bot.send_text_message(sender_id, response))
-        return "Message received"
-    else:
-        return "200"
+        # recuperena le json nalefany facebook
+        body = request.get_json()
+        # alefa any amn processus afa manao azy
+        run = Thread(target=analyse, args=[body])
+        run.start()
+    return 'OK'
 
-# def botsrsp():
-#     rows = req.getNatureDescripition(1)
-#     resp = jsonify(rows)
-
-#     return resp
+def analyse(body):
+    for event in body['entry']:
+        messaging = event['messaging']
+        for message in messaging:
+            if message.get('message'):
+                print(message)
+                sender_id = message['sender']['id']
+                if message['message'].get('quick_reply'):
+                    process_message(
+                        sender_id,
+                        message['message'].get('quick_reply').get('payload')
+                    )
+                    #print(process_message)
+                elif message['message'].get('text'):
+                    process_message(sender_id, message['message'].get('text'))
 
 
 @app.errorhandler(404)
