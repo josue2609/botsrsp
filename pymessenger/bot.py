@@ -369,80 +369,8 @@ class Bot:
             )
             result = response.json()
             return result
-    def send_quick_reply(self, dest_id, **kwargs):
-        if kwargs.get('MENU PRINCIPALE'):
-            text = 'Quelle action voulez-vous faire?'
-            if kwargs.get('_MENU'):
-                quick_rep = [
-                    {
-                        "content_type": "text",
-                        "title": "MENU",
-                        "payload": "_MENU",
-                        "image_url": "https://img.icons8.com/fluent/48/26e07f/heart-plus.png"
-                    }
-                ]
-            else:
-                quick_rep = [
-                    {
-                        "content_type": "text",
-                        "title": "Inscription",
-                        "payload": "_INSCRIPTION",
-                        "image_url": "https://img.icons8.com/fluent/48/26e07f/inscription.png"
-                    }
-                ]
-        elif kwargs.get('CONDITIONS'):
-            text = 'voulez-vous savoir les conditions? '
-            quick_rep = [
-                {
-                    "content_type": "text",
-                    "title": "conditions",
-                    "payload": "_CONDITIONS",
-                    "image_url": "https://img.icons8.com/flat_round/64/26e07f/plus.png"
-                },
-                {
-                    "content_type": "text",
-                    "title": "autres conditions",
-                    "payload": "_CONDITIONS_AUTRES",
-                    "image_url": "https://img.icons8.com/wired/64/26e07f/check-all.png"
-                }
-            ]
-        # elif kwargs.get('LIEN_PROFIL'):
-        #     text = 'Avez-vous accepter notre demande?'
-        #     quick_rep = [
-        #         {
-        #             "content_type": "text",
-        #             "title": "Oui",
-        #             "payload": kwargs.get('LIEN_PROFIL'),
-        #             "image_url": "https://img.icons8.com/flat_round/64/26e07f/plus.png"
-        #         },
-        #         {
-        #             "content_type": "text",
-        #             "title": "Non",
-        #             "payload": "DEMANDE_REJETER",
-        #             "image_url": "https://img.icons8.com/wired/64/26e07f/check-all.png"
-        #         }
-        #     ]
-        # elif kwargs.get('TEXTE_PERSONNALISER') and kwargs.get('USERNAME') : 
-        #     text = "Vous voulez un texte personnalisé."
-        #     quick_rep = [
-        #         {
-        #             "content_type": "text",
-        #             "title": "Non",
-        #             "payload": "_TEXTE_PERSONNALISER_OUI" + "***" + kwargs.get('TEXTE_PERSONNALISER') + "***" + kwargs.get('USERNAME'),
-        #             "image_url": "https://img.icons8.com/flat_round/64/26e07f/plus.png"
-        #         },
-        #         {
-        #             "content_type": "text",
-        #             "title": "Oui",
-        #             "payload": "_TEXTE_PERSONNALISER_OUI" + "***" + kwargs.get('TEXTE_PERSONNALISER')+"***"+ kwargs.get('USERNAME') ,
-        #             "image_url": "https://img.icons8.com/wired/64/26e07f/check-all.png"
-        #         }
-        #     ] 
-
-
-        else:
-            return
-
+            
+    def send_quick_reply(self, dest_id, text, quick_rep):
         data_json = {
             'messaging_type': "RESPONSE",
             'recipient': {
@@ -455,7 +383,9 @@ class Bot:
             }
         }
 
-        header = {'content-type': 'application/json; charset=utf-8'}
-        params = {"access_token": self.access_token}
-
-        return requests.post(self.graph_url + '/messages', json=data_json, headers=header, params=params)
+        request_endpoint = '{0}/me/messages'.format(self.graph_url)
+        return requests.post(
+            request_endpoint,
+            params = self.auth_args,
+            json = data_json
+        )
