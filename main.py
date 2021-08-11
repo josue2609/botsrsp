@@ -1,8 +1,7 @@
 from flask.wrappers import Response
-from app import app
 from threading import Thread
-from flask import jsonify
-from flask import flash, request
+from app import app
+from flask import jsonify, request
 from requete import Requete
 from Keys import facebook_bot_page_access_token
 from pymessenger.bot import Bot, NotificationType
@@ -19,40 +18,66 @@ req = Requete()
 
 #Traitement pour l'orchestration des services 
 def solde_liste(sender_id):
-    liste = []
+    data_reply = []
     rows1 = req.getNatureMenu('1')
     for row1 in rows1:
         response = row1.get('TYPE_NATURE')
-        bot.send_text_message(sender_id, response)
+        #bot.send_text_message(sender_id, response)
         #bot.send_quick_reply(sender_id, CONDITIONS = True)
-        liste.append(response)
-        #print(liste) 
-    bot.send_text_message(sender_id, "Choisissez la nature:")
-    return liste 
+        data_reply.append(
+            {
+                "content_type": "text",
+                "title": response,
+                "payload": response.upper()
+            }
+        )
+        print(response)
+    bot.send_quick_reply(
+        sender_id,
+        'Choisissez la nature: ',
+        data_reply
+    )
+    return
 
 def active_liste(sender_id):
-    liste = []
+    data_reply = []
     rows1 = req.getNatureMenu('2')
     for row1 in rows1:
         response = row1.get('TYPE_NATURE')
-        bot.send_text_message(sender_id, response)
-        #bot.send_quick_reply(sender_id, CONDITIONS = True)
-        liste.append(response)
-        #print(liste) 
-    bot.send_text_message(sender_id, "Choisissez la nature:")
-    return liste 
+        data_reply.append(
+            {
+                "content_type": "text",
+                "title": response,
+                "payload": response.upper()
+            }
+        )
+        print(response)
+    bot.send_quick_reply(
+        sender_id,
+        'Choisissez la nature: ',
+        data_reply
+    )
+    return
 
 def retraite_liste(sender_id):
-    liste = []
+    data_reply = []
     rows1 = req.getNatureMenu('3')
     for row1 in rows1:
         response = row1.get('TYPE_NATURE')
-        bot.send_text_message(sender_id, response)
-        #bot.send_quick_reply(sender_id, CONDITIONS = True)
-        liste.append(response)
-        #print(liste) 
-    bot.send_text_message(sender_id, "Choisissez la nature:")
-    return liste 
+        data_reply.append(
+            {
+                "content_type": "text",
+                "title": response,
+                "payload": response.upper()
+            }
+        )
+        print(response)
+    bot.send_quick_reply(
+        sender_id,
+        'Choisissez la nature: ',
+        data_reply
+    )
+    return
 
 def liste_solde(sender_id):
     liste = []
@@ -185,18 +210,34 @@ def process_message(sender_id, message):
         for rowd in rows:
             it = rowd.get('nombre')
             it = int(it)
+            data_reply = []
             for i in range (it+1):
                 re = req.getMenubyID(i)
                 for resp in re:
                     response = resp.get('MENU')
-                    bot.send_text_message(sender_id, response)
-            bot.send_text_message(sender_id, "Chaisissez votre menu: ")       
+                    # bot.send_text_message(sender_id, response)
+                    print(response)
+                    # pour ne pas faire planter l'API Messenger,
+                    # Si la response est vide, on passe au suivant
+                    if response.strip() == '': continue
+                    data_reply.append(
+                        {
+                            "content_type": "text",
+                            "title": response,
+                            "payload": response.upper()
+                        }
+                    )
+            bot.send_quick_reply(
+                sender_id,
+                'Saisissez votre menu: ',
+                data_reply
+            )     
         return 
 
     elif message == 'SOLDE':
         solde_liste(sender_id)    
         return 
-    elif message == 'AGENTS DE L\'ETAT EN ACTIVITÉ':
+    elif message == "AGENTS DE L'ETAT EN ACTIVITÉ":
         active_liste(sender_id)
         return
     elif message == 'AGENTS DE L\'ETAT RETRAITÉS':
@@ -207,15 +248,60 @@ def process_message(sender_id, message):
         ma_liste2 = liste_retraite(sender_id)
         if message in ma_liste:
             nature_solde(sender_id,message)
-            bot.send_text_message(sender_id, "Tapez CONDITIONS/BENEFICIAIRE/PIECE/CONTACT:TYPE NATURE Pour voir les détails")
+            # "Tapez CONDITIONS/BENEFICIAIRE/PIECE/CONTACT:TYPE NATURE Pour voir les détails"
+            bot.send_quick_reply(
+                sender_id,
+                'Voir les details: ',
+                [  
+                    {
+                        "content_type": "text",
+                        "title": response,
+                        "payload": response.upper() # a completer poru differencer le type.
+                    } for response in ('CONDITIONS', 'BENEFICIAIRE', 'PIECE', 'CONTACT')
+                ]
+            )
         elif message in ma_liste1:
             nature_active(sender_id,message)
-            bot.send_text_message(sender_id, "Tapez CONDITIONS/BENEFICIAIRE/PIECE/CONTACT:TYPE NATURE Pour voir les détails")
+            bot.send_quick_reply(
+                sender_id,
+                'Voir les details: ',
+                [  
+                    {
+                        "content_type": "text",
+                        "title": response,
+                        "payload": response.upper() # a completer poru differencer le type.
+                    } for response in ('CONDITIONS', 'BENEFICIAIRE', 'PIECE', 'CONTACT')
+                ]
+            )
         elif message in ma_liste2:
             nature_retraite(sender_id,message)
-            bot.send_text_message(sender_id, "Tapez CONDITIONS/BENEFICIAIRE/PIECE/CONTACT:TYPE NATURE Pour voir les détails")
+            bot.send_quick_reply(
+                sender_id,
+                'Voir les details: ',
+                [  
+                    {
+                        "content_type": "text",
+                        "title": response,
+                        "payload": response.upper() # a completer poru differencer le type.
+                    } for response in ('CONDITIONS', 'BENEFICIAIRE', 'PIECE', 'CONTACT')
+                ]
+            )
         else:
             details_nature(sender_id,message)
+
+            # A mettre sii aucun conditions n est verifié
+            # c a d il faut mettre dans le else.
+            bot.send_quick_reply(
+                sender_id,
+                'Afficher...',
+                [  
+                    {
+                        "content_type": "text",
+                        "title": 'MENU',
+                        "payload": 'MENU' # a completer poru differencer le type.
+                    }
+                ]
+            )
         return
     
 
@@ -247,7 +333,6 @@ def analyse(body):
                         sender_id,
                         message['message'].get('quick_reply').get('payload')
                     )
-                    #print(process_message)
                 elif message['message'].get('text'):
                     process_message(sender_id, message['message'].get('text'))
 
